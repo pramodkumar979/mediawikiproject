@@ -1,0 +1,28 @@
+node() {
+    cleanWs();
+
+    stage("Checkout") {
+        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'Git-credentials', url: '']]])
+    }
+     
+    configFileProvider([configFile(fileId: 'admin.config.ini', targetLocation: 'config.ini')]) {     
+    stage("Build Docker Image") {
+            env.shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
+            // echo "${shortCommit}"
+            sh "docker build -t imagename:${shortCommit} ."
+    }
+    }
+    
+    stage('Push Docker Image') {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'pompah-user-aws', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+            sh "aws ecr get-login-password --region ap-south-1 | docker login " 
+            sh "docker push imagename:${shortCommit}"
+        }
+    }
+    
+    stage('Deploy to EKS') {
+           // withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'pompah-user-aws', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    sh "envsubst < path/yaml filename | kubectl apply -f -"
+           // }
+    } 
+}
