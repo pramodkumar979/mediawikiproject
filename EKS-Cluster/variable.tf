@@ -10,10 +10,7 @@ variable "prefix" {
   default = "CompanyName"
 }
 variable "project" {
-  default = "PACEOS20"
-}
-variable "contact" {
-  default = "gudduray90@gmail.com"
+  default = "mediawiki"
 }
 
 locals {
@@ -25,7 +22,6 @@ locals {
     environment   = terraform.workspace
     role          = terraform.workspace
     project       = var.project
-    owner         = var.contact
     appname       = var.project
     bussinessunit = var.project
     managedby     = "Terraform"

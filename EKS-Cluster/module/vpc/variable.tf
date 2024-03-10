@@ -26,7 +26,7 @@ variable "prefix" {
 }
 variable "contact" {
   type    = string
-  default = "Guddu Kumar Ray"
+  default = "Promod Kumar"
 }
 variable "project" {
   type    = string

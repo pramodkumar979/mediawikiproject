@@ -1,10 +1,9 @@
 terraform {
   backend "s3" {
-    bucket         = "ssoteknocodepipelinenew"
+    bucket         = "mediawikicodepipelinenew"
     key            = "paceos-devqa.tfstate"
     region         = "ap-south-1"
     encrypt        = true
-    dynamodb_table = "paceapp-devops-tfstate-lock-test"
   }
 
   required_providers {
@@ -39,7 +38,6 @@ module "eks_cluster_and_worker_nodes" {
   vpc_id                 = module.vpc_for_eks.vpc_id
   eks_cluster_subnet_ids = module.vpc_for_eks.public_subnet_ids
   node_group_name        = "${local.eks_cluster_name}-node-group"
-  spot_node_group_name   = "${local.eks_cluster_name}-spot-node-group"
   public_subnet_ids      = module.vpc_for_eks.public_subnet_ids
 }
 
@@ -52,18 +50,6 @@ resource "null_resource" "add_custom_tags_to_asg" {
     command = <<EOF
 aws autoscaling create-or-update-tags \
   --tags ResourceId=${module.eks_cluster_and_worker_nodes.autoscaling_id[0]},ResourceType=auto-scaling-group,Key=Name,Value=${local.eks_cluster_name}-node-group,PropagateAtLaunch=true --region ap-south-1
-EOF
-  }
-}
-
-resource "null_resource" "add_custom_tags_to_spot_asg" {
-  triggers = {
-    node_group = module.eks_cluster_and_worker_nodes.spot_autoscaling_id[0]
-  }
-  provisioner "local-exec" {
-    command = <<EOF
-aws autoscaling create-or-update-tags \
-  --tags ResourceId=${module.eks_cluster_and_worker_nodes.spot_autoscaling_id[0]},ResourceType=auto-scaling-group,Key=Name,Value=${local.eks_cluster_name}-spot-node-group,PropagateAtLaunch=true --region ap-south-1
 EOF
   }
 }
